@@ -13,5 +13,5 @@
         {{ login_user|crispy }}
         <button type="submit" class="btn btn-success">Login</button>
     </form>
-    <p class="text-center">Don't have an account? <a href="/register">Create an account</a>.</p>
+    <p class="text-center">Don't have an account? <a href="{% url 'register' %}">Create an account</a>.</p>
 {% endblock %}

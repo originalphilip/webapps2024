@@ -16,6 +16,6 @@ class RegisterForm(UserCreationForm):
 
     def save(self, *args, **kwargs):
         user = super(RegisterForm, self).save(*args, **kwargs)
-        Points.objects.create(name=user)
+        Points.objects.create(user=user)
         return user
 

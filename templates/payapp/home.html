@@ -6,7 +6,7 @@
 
 {% block content %}
     {% if user.is_authenticated %}
-        <h5>Welcome, <em>{{ user.username }}</em>! Your Balance: {{ account.amount }}</h5>
+        <h5>Welcome, <em>{{ user.username }}</em>! <br> Your Balance: {{ account.amount }}</h5>
         <ul>
             <li><a href="{% url 'list_transactions' %}">View Transactions</a></li>
             <li><a href="{% url 'points_transfer' %}">Make a Payment</a></li>
