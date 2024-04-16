@@ -21,8 +21,11 @@ def money_transfer(request):
             dst_username = form.cleaned_data["enter_destination_username"]
             points_to_transfer = form.cleaned_data["enter_points_to_transfer"]
 
-            src_points = Points.objects.select_for_update().get(name__username=src_username)
-            dst_points = Points.objects.select_for_update().get(name__username=dst_username)
+            src_user = User.objects.get(username=src_username)
+            dst_user = User.objects.get(username=dst_username)
+
+            src_points = Points.objects.select_for_update().get(user=src_user)
+            dst_points = Points.objects.select_for_update().get(user=dst_user)
 
             if src_points.amount >= points_to_transfer:
                 src_points.amount = src_points.amount - points_to_transfer
@@ -32,14 +35,14 @@ def money_transfer(request):
                 dst_points.save()
 
                 Transaction.objects.create(
-                    sender=User.objects.get(username=src_username),
-                    receiver=User.objects.get(username=dst_username),
+                    sender=src_user,
+                    receiver=dst_user,
                     amount=points_to_transfer,
                     status='completed'  # Assuming you have such a field
                 )
 
                 transaction.on_commit(lambda: messages.success(request, "Points transferred successfully."))
-                return redirect('transactions:list_transactions')
+                return redirect('list_transactions')
             else:
                 messages.error(request, "Insufficient points for transfer.")
     else:
@@ -51,5 +54,6 @@ def money_transfer(request):
 @login_required
 def list_transactions(request):
     transactions = Transaction.objects.filter(sender=request.user) | Transaction.objects.filter(receiver=request.user)
+    transactions = transactions.order_by('-timestamp')#order by most recent transaction
     return render(request, "transactions/transaction_history.html", {'transactions': transactions})
 
