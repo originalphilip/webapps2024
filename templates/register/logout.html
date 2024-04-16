@@ -1,0 +1,16 @@
+{% extends 'payapp/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    Logout
+{% endblock %}
+
+{% block content %}
+
+    <h1>Login to Account</h1>
+    <form method="post" class="form-group">
+        {% csrf_token %}
+        {{ logout_user|crispy }}
+        <button type="submit" class="btn btn-success">Logout</button>
+    </form>
+{% endblock %}

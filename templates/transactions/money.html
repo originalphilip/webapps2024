@@ -1,0 +1,27 @@
+{% extends 'payapp/base.html' %}
+
+{% block title %}
+    Users' Points
+{% endblock %}
+
+{% block content %}
+
+    {% if user.is_authenticated %}
+        <br>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Points</th>
+            </tr>
+            <tr>
+                <td>{{ src_points.name }}</td>
+                <td>{{ src_points.points }}</td>
+            </tr>
+            <tr>
+                <td>{{ dst_points.name }}</td>
+                <td>{{ dst_points.points }}</td>
+            </tr>
+        </table>
+    {% endif %}
+
+{% endblock %}

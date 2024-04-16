@@ -1,0 +1,16 @@
+{% extends 'payapp/base.html' %}
+
+{% block title %}
+    Transfer Money Between Users
+{% endblock %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <h4>Transfer Money</h4>
+    <form method="post" class="form-group">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-success">Transfer</button>
+    </form>
+{% endblock %}
