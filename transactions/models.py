@@ -16,7 +16,7 @@ class Points(models.Model):
 class PointsTransfer(models.Model):
     enter_your_username = models.CharField(max_length=50)
     enter_destination_username = models.CharField(max_length=50)
-    enter_points_to_transfer = models.IntegerField()
+    enter_points_to_transfer = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         details = ''
@@ -35,3 +35,11 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f'{self.sender} -> {self.receiver}: ${self.amount} on {self.timestamp.strftime("%Y-%m-%d %H:%M:%S")}'
+
+
+class PaymentRequest(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_payment_requests', on_delete=models.CASCADE)
+    enter_destination_username = models.CharField(max_length=50)
+    enter_amount_to_request = models.DecimalField(max_digits=10, decimal_places=2)
+    message = models.TextField(blank=True, null=True)  # Makes sure this field exists if used in the form
+    status = models.CharField(max_length=100, default='pending')  # this can be 'pending', 'accepted' or 'rejected'
