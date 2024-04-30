@@ -31,6 +31,7 @@ class Transaction(models.Model):
     receiver = models.ForeignKey(User, related_name='received_transactions', on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
+    currency = models.CharField(max_length=3)
     status = models.CharField(max_length=100, default='completed')
 
     def __str__(self):

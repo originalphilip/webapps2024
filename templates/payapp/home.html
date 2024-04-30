@@ -12,33 +12,6 @@
             <li><a href="{% url 'points_transfer' %}">Make a Payment</a></li>
             <li><a href="{% url 'payment_request' %}">Request a Payment</a></li>
         </ul>
-        <h2>Recent Transactions:</h2>
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Sender</th>
-                <th>Receiver</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Status</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for transaction in transactions %}
-                <tr>
-                    <td>{{ transaction.sender.username }}</td>
-                    <td>{{ transaction.receiver.username }}</td>
-                    <td>${{ transaction.amount }}</td>
-                    <td>{{ transaction.timestamp|date:"Y-m-d H:i" }}</td>
-                    <td>{{ transaction.status }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="5">No transactions found.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
     {% else %}
         <h5>Payapp Homepage. Please <a href="{% url 'login' %}">login</a> to start ...</h5>
     {% endif %}

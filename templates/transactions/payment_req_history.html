@@ -6,21 +6,22 @@
     <h2>Requests</h2>
     <ul>
         {% for request in received_requests %}
-            <li>
-                From: {{ request.sender.username }} - Amount: {{ request.enter_amount_to_request }} - Message: {{ request.message }}
-                <br>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                <form method="post" action="{% url 'accept_payment' request.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success">Accept</button>
-                </form>
-
-                <form method="post" action="{% url 'reject_payment' request.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Reject</button>
-                </form>
-                </div>
-            </li>
+            <div>
+                <strong>From:</strong> {{ request.sender.username }}<br>
+                <strong>Amount:</strong> {{ request.enter_amount_to_request }}<br>
+                <strong>Message:</strong> {{ request.message }}<br>
+                <strong>Status:</strong> {{ request.status }}<br>
+                {% if request.status == 'pending' %}
+                    <form method="post" action="{% url 'accept_payment' request.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Accept</button>
+                    </form>
+                    <form method="post" action="{% url 'reject_payment' request.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                {% endif %}
+            </div>
         {% empty %}
             <li>No payment requests.</li>
         {% endfor %}

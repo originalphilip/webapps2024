@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from transactions.models import Points
+from .models import Profile
+from .utils import get_currency_conversion
 
 
 class RegisterForm(UserCreationForm):
@@ -16,6 +18,19 @@ class RegisterForm(UserCreationForm):
 
     def save(self, *args, **kwargs):
         user = super(RegisterForm, self).save(*args, **kwargs)
-        Points.objects.create(user=user)
+        chosen_currency = self.cleaned_data['currency']
+        base_amount = 1000
+        if chosen_currency != 'GBP':
+            conversion_result = get_currency_conversion('GBP', chosen_currency, base_amount)
+            if conversion_result and 'converted_amount' in conversion_result:
+                amount = conversion_result['converted_amount']
+            else:
+                # Handle potential error or invalid conversion
+                amount = base_amount  # Fallback to the base amount if conversion fails
+        else:
+            amount = base_amount
+        Points.objects.create(user=user, amount=amount)
+        user.save()
+        user_profile = Profile(user=user, currency=chosen_currency)
+        user_profile.save()
         return user
-
