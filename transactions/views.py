@@ -32,15 +32,15 @@ def money_transfer(request):
             src_currency = src_user.profile.currency
             dst_currency = dst_user.profile.currency
 
-            conversion_result = get_currency_conversion(src_currency, dst_currency, points_to_transfer)
-            if 'converted_amount' in conversion_result:
-                converted_amount = conversion_result['converted_amount']
+            if src_currency == dst_currency:
+                converted_amount = points_to_transfer
             else:
-                messages.error(request, "Failed to convert currency.")
-                return render(request, "transactions/moneytransfer.html", {"form": form})
-
-            print(type(src_points.amount), src_points.amount)
-            print(type(converted_amount), converted_amount)
+                conversion_result = get_currency_conversion(src_currency, dst_currency, points_to_transfer)
+                if 'converted_amount' in conversion_result:
+                    converted_amount = conversion_result['converted_amount']
+                else:
+                    messages.error(request, "Failed to convert currency.")
+                    return render(request, "transactions/moneytransfer.html", {"form": form})
 
             if src_points.amount >= converted_amount:
                 src_points.amount -= converted_amount
@@ -52,8 +52,10 @@ def money_transfer(request):
                 Transaction.objects.create(
                     sender=src_user,
                     receiver=dst_user,
-                    amount=converted_amount,
-                    currency=dst_currency,
+                    original_amount=points_to_transfer,
+                    original_currency=src_currency,
+                    converted_amount=converted_amount,
+                    converted_currency=dst_currency,
                     status='completed'
                 )
 
@@ -104,29 +106,29 @@ def list_transactions(request):
     transactions = Transaction.objects.filter(sender=request.user) | Transaction.objects.filter(receiver=request.user)
     transactions = transactions.order_by('-timestamp')
     user_profile = Profile.objects.get(user=request.user)
-    currency = user_profile.currency
+    user_currency = user_profile.currency
 
     converted_transactions = []
     for transaction in transactions:
-        conversion_result = get_currency_conversion(transaction.currency, currency, transaction.amount)
-        if 'converted_amount' in conversion_result:
-            amount = conversion_result['converted_amount']
+        if request.user == transaction.sender:
+            amount = transaction.original_amount
+            transaction_currency = transaction.original_currency
         else:
-            amount = transaction.amount
-            currency = transaction.currency
+            amount = transaction.converted_amount
+            transaction_currency = transaction.converted_currency
 
         converted_transactions.append({
             'sender': transaction.sender.username,
             'receiver': transaction.receiver.username,
             'amount': amount,
-            'currency': currency,
+            'currency': transaction_currency,
             'timestamp': transaction.timestamp,
             'status': transaction.status
         })
 
     return render(request, "transactions/transaction_history.html", {
         'transactions': converted_transactions,
-        'user_currency': currency
+        'user_currency': user_currency
     })
 
 

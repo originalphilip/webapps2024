@@ -29,13 +29,15 @@ class PointsTransfer(models.Model):
 class Transaction(models.Model):
     sender = models.ForeignKey(User, related_name='sent_transactions', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_transactions', on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    original_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    original_currency = models.CharField(max_length=3, null=True)
+    converted_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    converted_currency = models.CharField(max_length=3, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    currency = models.CharField(max_length=3)
     status = models.CharField(max_length=100, default='completed')
 
     def __str__(self):
-        return f'{self.sender} -> {self.receiver}: ${self.amount} on {self.timestamp.strftime("%Y-%m-%d %H:%M:%S")}'
+        return f'{self.sender.username} -> {self.receiver.username}: {self.original_amount} {self.original_currency} on {self.timestamp.strftime("%Y-%m-%d %H:%M:%S")}'
 
 
 class PaymentRequest(models.Model):
