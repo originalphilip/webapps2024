@@ -43,11 +43,11 @@ def money_transfer(request):
                     return render(request, "transactions/moneytransfer.html", {"form": form})
 
             if src_points.amount >= converted_amount:
-                src_points.amount -= converted_amount
-                src_points.save()
+                src_points.amount = F('amount') - points_to_transfer
+                src_points.save(update_fields=['amount'])
 
-                dst_points.amount += converted_amount
-                dst_points.save()
+                dst_points.amount = F('amount') + converted_amount
+                dst_points.save(update_fields=['amount'])
 
                 Transaction.objects.create(
                     sender=src_user,

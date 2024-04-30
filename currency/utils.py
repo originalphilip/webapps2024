@@ -6,8 +6,7 @@ def convert_currency(currency1, currency2, amount):
         'GBP': {'USD': 1.22, 'EUR': 1.14, 'GBP': 1.0}
     }
 
-    if currency1 not in exchange_rates or currency2 not in exchange_rates[currency1]:
-        return None
-
-    rate = exchange_rates[currency1][currency2]
-    return  amount * rate
+    if currency1 in exchange_rates and currency2 in exchange_rates[currency1]:
+        converted_amount = amount * exchange_rates[currency1][currency2]
+        return round(converted_amount, 2)  # Ensure rounding to 2 decimal places for currency
+    return None

@@ -7,8 +7,14 @@ from register.models import Profile
 
 @login_required
 def home(request):
-    account = Profile.objects.get(user=request.user)
+    profile = Profile.objects.get(user=request.user)
+    try:
+        points = Points.objects.get(user=request.user)
+    except Points.DoesNotExist:
+        points = None
+
     context = {
-        'account': account
+        'account': profile,
+        'points': points
     }
     return render(request, 'payapp/home.html', context)
