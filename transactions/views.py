@@ -1,12 +1,13 @@
 from django.db import transaction, OperationalError
 from django.db.models import F
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
+
 from . import models
 from transactions.forms import MoneyTransferForm, PaymentRequestForm
-from .models import Points
+from .models import Points, Notification, Transaction, PaymentRequest
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Transaction, PaymentRequest
 from django.contrib.auth.models import User
 from .utils import get_currency_conversion
 from register.models import Profile
@@ -185,3 +186,14 @@ def reject_payment(request, request_id):
     payment_request.save()
     messages.success(request, "Payment request rejected.")
     return redirect('view_payment_requests')
+
+def notifications(request):
+    user_notifications = Notification.objects.filter(user=request.user, read=False)
+    return render(request, 'notifications.html', {'notifications': user_notifications})
+
+@require_POST
+def mark_as_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.read = True
+    notification.save()
+    return redirect(request.META.get('HTTP_REFERER', 'home'))

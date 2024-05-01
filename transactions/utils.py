@@ -1,5 +1,5 @@
 import requests
-
+from .models import Notification
 
 def get_currency_conversion(base_currency, target_currency, amount):
     # Construct the URL for the currency conversion service

@@ -8,5 +8,6 @@ urlpatterns = [
     path('payment_req_history', views.view_payment_requests, name='view_payment_requests'),
     path('payment_request/accept/<int:request_id>/', views.accept_payment, name='accept_payment'),
     path('payment_request/reject/<int:request_id>/', views.reject_payment, name='reject_payment'),
+    path('notifications/read/<int:notification_id>/', views.mark_as_read, name='mark_notification_read'),
 
 ]

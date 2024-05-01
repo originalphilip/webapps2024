@@ -46,3 +46,12 @@ class PaymentRequest(models.Model):
     enter_amount_to_request = models.DecimalField(max_digits=10, decimal_places=2)
     message = models.TextField(blank=True, null=True)  # Makes sure this field exists if used in the form
     status = models.CharField(max_length=100, default='pending')  # this can be 'pending', 'accepted' or 'rejected'
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    read = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Notification for {self.user.username} - Read: {self.read}'
