@@ -25,8 +25,7 @@ class RegisterForm(UserCreationForm):
             if conversion_result and 'converted_amount' in conversion_result:
                 amount = conversion_result['converted_amount']
             else:
-                # Handle potential error or invalid conversion
-                amount = base_amount  # Fallback to the base amount if conversion fails
+                amount = base_amount
         else:
             amount = base_amount
         Points.objects.create(user=user, amount=amount)

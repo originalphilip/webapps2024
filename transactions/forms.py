@@ -1,25 +1,38 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 from . import models
+from .models import PaymentRequest
 
 
-class MoneyTransferForm(forms.ModelForm):
-    class Meta:
-        model = models.PointsTransfer
-        fields = ["enter_your_username", "enter_destination_username", "enter_points_to_transfer"]
+class MoneyTransferForm(forms.Form):
+    enter_destination_username = forms.CharField(label='Destination Username', max_length=150)
+    enter_points_to_transfer = forms.DecimalField(label='Amount to Transfer', max_digits=10, decimal_places=2)
+
+    def clean_enter_destination_username(self):
+        username = self.cleaned_data['enter_destination_username']
+        if not User.objects.filter(username=username).exists():
+            raise ValidationError("The entered username does not exist.")
+        return username
+
+    def clean_enter_points_to_transfer(self):
+        points = self.cleaned_data['enter_points_to_transfer']
+        if points <= 0:
+            raise ValidationError("Enter a valid amount to transfer.")
+        return points
 
 
 class PaymentRequestForm(forms.ModelForm):
+    receiver = forms.CharField(required=True)
+
     class Meta:
-        model = models.PaymentRequest
-        fields = ["enter_destination_username", "enter_amount_to_request", "message"]
+        model = PaymentRequest
+        fields = ['receiver', 'amount', 'message']
 
-    def clean(self):
-        cleaned_data = super().clean()
-        sender_username = self.initial.get('sender')  # safer access
-        enter_destination_username = cleaned_data.get('enter_destination_username')
-
-        if sender_username and enter_destination_username == sender_username:
-            raise forms.ValidationError("You cannot send a request to yourself.")
-
-        return cleaned_data
+    def clean_receiver(self):
+        username = self.cleaned_data.get('receiver')
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise ValidationError("The entered username does not exist.")
+        return user

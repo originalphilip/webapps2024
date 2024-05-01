@@ -5,14 +5,17 @@
 {% endblock %}
 
 {% block content %}
-    {% if user.is_authenticated %}
-        <h5>Welcome, <em>{{ user.username }}</em>! <br> Your Balance: {{ points.amount }}</h5>
-        <ul>
-            <li><a href="{% url 'list_transactions' %}">View Transactions</a></li>
-            <li><a href="{% url 'points_transfer' %}">Make a Payment</a></li>
-            <li><a href="{% url 'payment_request' %}">Request a Payment</a></li>
-        </ul>
-    {% else %}
-        <h5>Payapp Homepage. Please <a href="{% url 'login' %}">login</a> to start ...</h5>
-    {% endif %}
+    <div class="container mt-4">
+        {% if user.is_authenticated %}
+            <h5>Welcome, <em>{{ user.username }}</em>!</h5>
+            <div class="alert alert-info">Your Balance: <strong>{{ points.amount }}</strong></div>
+            <ul class="list-group">
+                <li class="list-group-item"><a href="{% url 'list_transactions' %}">View Transactions</a></li>
+                <li class="list-group-item"><a href="{% url 'points_transfer' %}">Make a Payment</a></li>
+                <li class="list-group-item"><a href="{% url 'create_payment_request' %}">Request a Payment</a></li>
+            </ul>
+        {% else %}
+            <h5>Payapp Homepage. Please <a href="{% url 'login' %}">login</a> to start...</h5>
+        {% endif %}
+    </div>
 {% endblock %}

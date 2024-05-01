@@ -9,9 +9,9 @@ from .models import Points, Notification, Transaction, PaymentRequest
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .utils import get_currency_conversion
+from .utils import get_currency_conversion, transfer_money
 from register.models import Profile
-
+from decimal import Decimal
 
 
 @login_required()
@@ -20,86 +20,20 @@ def money_transfer(request):
     if request.method == 'POST':
         form = MoneyTransferForm(request.POST)
         if form.is_valid():
-            src_username = form.cleaned_data["enter_your_username"]
             dst_username = form.cleaned_data["enter_destination_username"]
-            points_to_transfer = form.cleaned_data["enter_points_to_transfer"]
-
-            src_user = User.objects.get(username=src_username)
+            amount = form.cleaned_data["enter_points_to_transfer"]
+            src_user = request.user
             dst_user = User.objects.get(username=dst_username)
 
-            src_points = Points.objects.select_for_update().get(user=src_user)
-            dst_points = Points.objects.select_for_update().get(user=dst_user)
-
-            src_currency = src_user.profile.currency
-            dst_currency = dst_user.profile.currency
-
-            if src_currency == dst_currency:
-                converted_amount = points_to_transfer
-            else:
-                conversion_result = get_currency_conversion(src_currency, dst_currency, points_to_transfer)
-                if 'converted_amount' in conversion_result:
-                    converted_amount = conversion_result['converted_amount']
-                else:
-                    messages.error(request, "Failed to convert currency.")
-                    return render(request, "transactions/moneytransfer.html", {"form": form})
-
-            if src_points.amount >= converted_amount:
-                src_points.amount = F('amount') - points_to_transfer
-                src_points.save(update_fields=['amount'])
-
-                dst_points.amount = F('amount') + converted_amount
-                dst_points.save(update_fields=['amount'])
-
-                Transaction.objects.create(
-                    sender=src_user,
-                    receiver=dst_user,
-                    original_amount=points_to_transfer,
-                    original_currency=src_currency,
-                    converted_amount=converted_amount,
-                    converted_currency=dst_currency,
-                    status='completed'
-                )
-
-                messages.success(request, "Money transferred successfully.")
+            success, message = transfer_money(src_user, dst_user, amount)
+            messages.info(request, message)
+            if success:
                 return redirect('list_transactions')
             else:
-                messages.error(request, "Insufficient money for transfer.")
+                return render(request, "transactions/moneytransfer.html", {"form": form})
     else:
         form = MoneyTransferForm()
-
-    return render(request, "transactions/moneytransfer.html", {"form": form})
-
-
-@login_required()
-def payment_request(request):
-    if request.method == 'POST':
-        form = PaymentRequestForm(request.POST)
-    else:
-        # Initialize the form with the current user set as the sender
-        initial_data = {'sender': request.user.username}  # assuming the form needs a username
-        form = PaymentRequestForm(initial=initial_data)
-    if form.is_valid():
-        dst_username = form.cleaned_data['enter_destination_username']
-        amount_requested = form.cleaned_data['enter_amount_to_request']
-        message = form.cleaned_data['message']
-
-        try:
-            dst_user = User.objects.get(username=dst_username)
-            PaymentRequest.objects.create(
-                sender=request.user,
-                enter_destination_username=dst_user,
-                enter_amount_to_request=amount_requested,
-                message=message,
-                status='pending'
-            )
-            messages.success(request,"Payment Request sent")
-            return redirect('list_transactions')
-        except User.DoesNotExist:
-            messages.error(request, "Cant find user")
-        pass
-    else:
-        messages.error(request,"Invalid information entered")
-    return render(request, "transactions/request_payments.html", {"form": form})
+        return render(request, "transactions/moneytransfer.html", {"form": form})
 
 
 @login_required
@@ -132,59 +66,85 @@ def list_transactions(request):
         'user_currency': user_currency
     })
 
+@login_required
+def create_payment_request(request):
+    if request.method == 'POST':
+        form = PaymentRequestForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['receiver']
+            amount = form.cleaned_data['amount']
+            message = form.cleaned_data['message']
 
-@login_required()
-def view_payment_requests(request):
-    received_requests = PaymentRequest.objects.filter(enter_destination_username=request.user).order_by('-id')
-    return render(request, "transactions/payment_req_history.html", {'received_requests': received_requests})
+            try:
+                receiver = User.objects.get(username=username)
+            except User.DoesNotExist:
+                messages.error(request, "User not found.")
+                return render(request, 'transactions/create_payment_request.html', {'form': form})
 
-
-@login_required()
-def accept_payment(request, request_id):
-    payment_request = PaymentRequest.objects.get(id=request_id)
-    if payment_request.status == 'pending':
-
-        # do transaction
-        src_user = payment_request.sender
-        dst_user = User.objects.get(username=payment_request.enter_destination_username)
-
-        requester_money = Points.objects.select_for_update().get(user=src_user)
-        responder_money = Points.objects.select_for_update().get(user=dst_user)
-
-        if responder_money.amount >= payment_request.enter_amount_to_request:
-            # perform transaction
-            responder_money.amount -= payment_request.enter_amount_to_request
-            requester_money.amount += payment_request.enter_amount_to_request
-            responder_money.save()
-            requester_money.save()
-
-            # Record the transaction
-            Transaction.objects.create(
-                sender=src_user,
-                receiver=dst_user,
-                amount=payment_request.enter_amount_to_request,
-                status='completed'
+            payment_request = PaymentRequest(
+                sender=request.user,
+                receiver=receiver,
+                amount=amount,
+                message=message
             )
-            # update payment status
-            payment_request.status = 'accepted'
             payment_request.save()
-
-            messages.success(request, "Payment accepted.")
+            messages.success(request, "Payment request created successfully.")
+            return redirect('view_payment_requests')
         else:
-            payment_request.status = 'failed'
-            payment_request.save()
-            messages.error(request, "Transaction failed due to insufficient funds.")
+            messages.error(request, "Invalid data entered.")
     else:
-        messages.error(request, "Invalid payment request status.")
-    return redirect('view_payment_requests')
+        form = PaymentRequestForm()
 
+    return render(request, 'transactions/create_payment_request.html', {'form': form})
 
-@login_required()
-def reject_payment(request, request_id):
-    payment_request = get_object_or_404(PaymentRequest, id=request_id, enter_destination_username=request.user)
+@login_required
+def view_payment_requests(request):
+    payment_requests = PaymentRequest.objects.filter(receiver=request.user, status='pending')
+    return render(request, 'transactions/view_payment_requests.html', {'payment_requests': payment_requests})
+
+@login_required
+def accept_payment_request(request, payment_request_id):
+    payment_request = get_object_or_404(PaymentRequest, id=payment_request_id, receiver=request.user)
+    if payment_request.status == 'pending':
+        try:
+            result = get_currency_conversion(payment_request.sender.profile.currency, request.user.profile.currency, payment_request.amount)
+            if 'converted_amount' in result:
+                converted_amount = Decimal(result['converted_amount'])
+                print(f"Converted Amount: {converted_amount}, Type: {type(converted_amount)}")
+
+                receiver_points = Points.objects.select_for_update().get(user=request.user)
+                receiver_points_amount = Decimal(receiver_points.amount)
+                print(f"Receiver Points Amount: {receiver_points_amount}, Type: {type(receiver_points_amount)}")
+
+                if receiver_points_amount >= converted_amount:
+                    sender_points = Points.objects.select_for_update().get(user=payment_request.sender)
+                    receiver_points.amount = receiver_points_amount - converted_amount
+                    sender_points.amount += payment_request.amount
+                    receiver_points.save()
+                    sender_points.save()
+
+                    payment_request.status = 'accepted'
+                    payment_request.save()
+                    messages.success(request, "Payment request accepted.")
+                else:
+                    messages.error(request, "Insufficient funds to accept payment request.")
+            else:
+                messages.error(request, "Failed to get a valid conversion result.")
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            messages.error(request, f"Unhandled error: {str(e)}")
+        finally:
+            return redirect('view_payment_requests')
+    else:
+        messages.error(request, "This payment request has already been processed.")
+        return redirect('view_payment_requests')
+
+@login_required
+def reject_payment_request(request, request_id):
+    payment_request = get_object_or_404(PaymentRequest, id=request_id, receiver=request.user)
     payment_request.status = 'rejected'
     payment_request.save()
-    messages.success(request, "Payment request rejected.")
     return redirect('view_payment_requests')
 
 def notifications(request):

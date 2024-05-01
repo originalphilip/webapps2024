@@ -1,0 +1,15 @@
+{% extends 'payapp/base.html' %}
+{% block content %}
+    <h2>Your Payment Requests</h2>
+    <ul>
+        {% for request in payment_requests %}
+            <li>
+                {{ request.amount }} from {{ request.sender.username }}
+                <a href="{% url 'accept_payment_request' request.id %}">Accept</a>
+                <a href="{% url 'reject_payment_request' request.id %}">Reject</a>
+            </li>
+        {% empty %}
+            <li>No payment requests.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

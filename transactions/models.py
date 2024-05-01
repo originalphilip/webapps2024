@@ -4,7 +4,7 @@ from django.db import models
 
 class Points(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    amount = models.IntegerField(default=1000)
+    amount = models.DecimalField(default=1000, max_digits=10, decimal_places=2)
 
     def __str__(self):
         details = ''
@@ -39,13 +39,16 @@ class Transaction(models.Model):
     def __str__(self):
         return f'{self.sender.username} -> {self.receiver.username}: {self.original_amount} {self.original_currency} on {self.timestamp.strftime("%Y-%m-%d %H:%M:%S")}'
 
-
 class PaymentRequest(models.Model):
     sender = models.ForeignKey(User, related_name='sent_payment_requests', on_delete=models.CASCADE)
-    enter_destination_username = models.CharField(max_length=50)
-    enter_amount_to_request = models.DecimalField(max_digits=10, decimal_places=2)
-    message = models.TextField(blank=True, null=True)  # Makes sure this field exists if used in the form
-    status = models.CharField(max_length=100, default='pending')  # this can be 'pending', 'accepted' or 'rejected'
+    receiver = models.ForeignKey(User, related_name='received_payment_requests', on_delete=models.CASCADE, null=True)#change to null=false when fields are updated
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, null=True)#change to null=false when fields are updated
+    message = models.TextField(default='', blank=True)
+    status = models.CharField(max_length=10, choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')], default='pending')
+
+    def __str__(self):
+        return f"{self.amount} {self.currency} from {self.sender.username} to {self.receiver.username} status {self.status}"
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
