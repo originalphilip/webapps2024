@@ -16,6 +16,7 @@ def get_currency_conversion(base_currency, target_currency, amount):
     except Exception as e:
         return {"error": "An error occurred while making the request.", "details": str(e)}
 
+
 def transfer_money(src_user, dst_user, amount):
     src_points = Points.objects.select_for_update().get(user=src_user)
     dst_points = Points.objects.select_for_update().get(user=dst_user)

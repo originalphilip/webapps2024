@@ -1,9 +1,6 @@
 from django.db import transaction, OperationalError
-from django.db.models import F
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
-
-from . import models
 from transactions.forms import MoneyTransferForm, PaymentRequestForm
 from .models import Points, Notification, Transaction, PaymentRequest
 from django.contrib import messages
@@ -12,7 +9,6 @@ from django.contrib.auth.models import User
 from .utils import get_currency_conversion, transfer_money
 from register.models import Profile
 from decimal import Decimal
-
 
 @login_required()
 @transaction.atomic()
@@ -85,6 +81,7 @@ def create_payment_request(request):
                 sender=request.user,
                 receiver=receiver,
                 amount=amount,
+                currency=request.user.profile.currency,
                 message=message
             )
             payment_request.save()
@@ -106,39 +103,19 @@ def view_payment_requests(request):
 def accept_payment_request(request, payment_request_id):
     payment_request = get_object_or_404(PaymentRequest, id=payment_request_id, receiver=request.user)
     if payment_request.status == 'pending':
-        try:
-            result = get_currency_conversion(payment_request.sender.profile.currency, request.user.profile.currency, payment_request.amount)
-            if 'converted_amount' in result:
-                converted_amount = Decimal(result['converted_amount'])
-                print(f"Converted Amount: {converted_amount}, Type: {type(converted_amount)}")
+        success, message = transfer_money(payment_request.sender, request.user, payment_request.amount)
 
-                receiver_points = Points.objects.select_for_update().get(user=request.user)
-                receiver_points_amount = Decimal(receiver_points.amount)
-                print(f"Receiver Points Amount: {receiver_points_amount}, Type: {type(receiver_points_amount)}")
+        if success:
+            payment_request.status = 'accepted'
+            payment_request.save()
+            messages.success(request, "Payment request accepted and money transferred.")
+        else:
+            messages.error(request, message)
 
-                if receiver_points_amount >= converted_amount:
-                    sender_points = Points.objects.select_for_update().get(user=payment_request.sender)
-                    receiver_points.amount = receiver_points_amount - converted_amount
-                    sender_points.amount += payment_request.amount
-                    receiver_points.save()
-                    sender_points.save()
-
-                    payment_request.status = 'accepted'
-                    payment_request.save()
-                    messages.success(request, "Payment request accepted.")
-                else:
-                    messages.error(request, "Insufficient funds to accept payment request.")
-            else:
-                messages.error(request, "Failed to get a valid conversion result.")
-        except ValueError as e:
-            messages.error(request, str(e))
-        except Exception as e:
-            messages.error(request, f"Unhandled error: {str(e)}")
-        finally:
-            return redirect('view_payment_requests')
+        return redirect('list_transactions')
     else:
         messages.error(request, "This payment request has already been processed.")
-        return redirect('view_payment_requests')
+        return redirect('list_transactions')
 
 @login_required
 def reject_payment_request(request, request_id):
