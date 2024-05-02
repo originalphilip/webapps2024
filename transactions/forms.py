@@ -29,8 +29,14 @@ class PaymentRequestForm(forms.ModelForm):
         model = PaymentRequest
         fields = ['receiver', 'amount', 'message']
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super(PaymentRequestForm, self).__init__(*args, **kwargs)
+
     def clean_receiver(self):
         username = self.cleaned_data.get('receiver')
+        if username == self.user.username:
+            raise ValidationError("You cannot send a payment request to yourself.")
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:

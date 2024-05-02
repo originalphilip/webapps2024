@@ -65,7 +65,7 @@ def list_transactions(request):
 @login_required
 def create_payment_request(request):
     if request.method == 'POST':
-        form = PaymentRequestForm(request.POST)
+        form = PaymentRequestForm(request.POST, user=request.user)
         if form.is_valid():
             username = form.cleaned_data['receiver']
             amount = form.cleaned_data['amount']
@@ -90,7 +90,7 @@ def create_payment_request(request):
         else:
             messages.error(request, "Invalid data entered.")
     else:
-        form = PaymentRequestForm()
+        form = PaymentRequestForm(user=request.user)
 
     return render(request, 'transactions/create_payment_request.html', {'form': form})
 
