@@ -70,13 +70,11 @@ def create_payment_request(request):
             username = form.cleaned_data['receiver']
             amount = form.cleaned_data['amount']
             message = form.cleaned_data['message']
-
             try:
                 receiver = User.objects.get(username=username)
             except User.DoesNotExist:
                 messages.error(request, "User not found.")
                 return render(request, 'transactions/create_payment_request.html', {'form': form})
-
             payment_request = PaymentRequest(
                 sender=request.user,
                 receiver=receiver,
@@ -91,7 +89,6 @@ def create_payment_request(request):
             messages.error(request, "Invalid data entered.")
     else:
         form = PaymentRequestForm(user=request.user)
-
     return render(request, 'transactions/create_payment_request.html', {'form': form})
 
 @login_required

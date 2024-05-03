@@ -27,28 +27,6 @@ def login_user(request):
     form = AuthenticationForm()
     return render(request, "register/login.html", {"login_user": form})
 
-
-# @csrf_protect
-# def register_user(request):
-#     with transaction.atomic():
-#         if request.method == "POST":
-#             form = RegisterForm(request.POST)
-#             if form.is_valid():
-#                 user = form.save()
-#                 # login(request, user)
-#                 profile, created = Profile.objects.get_or_create(user=user,
-#                                                                  defaults={'currency': form.cleaned_data['currency']})
-#             if created:
-#                 messages.success(request, "Registration successful and profile created.")
-#             else:
-#                 messages.info(request, "Registration successful but profile already existed.")
-#                 return redirect("login")
-#                 # messages.success(request, "Registration successful.")
-#                 # return HttpResponse("Homepage")
-#             messages.error(request, "Unsuccessful registration. Invalid information.")
-#     form = RegisterForm()
-#     return render(request, "register/register.html", {"register_user": form})
-
 @csrf_protect
 def register_user(request):
     if request.method == "POST":

@@ -13,6 +13,9 @@
                 <li class="list-group-item"><a href="{% url 'list_transactions' %}">View Transactions</a></li>
                 <li class="list-group-item"><a href="{% url 'points_transfer' %}">Make a Payment</a></li>
                 <li class="list-group-item"><a href="{% url 'create_payment_request' %}">Request a Payment</a></li>
+                {% if is_admin %}
+                    <li class="list-group-item"><a href="{% url 'admin:index' %}">Admin Dashboard</a></li>
+                {% endif %}
             </ul>
         {% else %}
             <h5>Payapp Homepage. Please <a href="{% url 'login' %}">login</a> to start...</h5>

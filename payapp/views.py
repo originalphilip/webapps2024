@@ -15,6 +15,7 @@ def home(request):
 
     context = {
         'account': profile,
-        'points': points
+        'points': points,
+        'is_admin': request.user.is_staff,
     }
     return render(request, 'payapp/home.html', context)

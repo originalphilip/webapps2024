@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,7 +44,7 @@ INSTALLED_APPS = [
     "register.apps.RegisterConfig",
     "transactions.apps.TransactionsConfig",
     "currency.apps.CurrencyConfig",
-    'rest_framework'
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+X_FRAME_OPTIONS = 'DENY'
 
 ROOT_URLCONF = 'webapps2024.urls'
 
@@ -136,3 +139,8 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
 LOGIN_URL = '/webapps2024/login/' #This tells Django where to redirect users for loggin in when the 'login_required'
+
+# settings.py
+CSRF_COOKIE_SECURE = False  # to prevent CSRF token from being transmitted over non-HTTPS connections
+SESSION_COOKIE_SECURE = False  # to prevent the session ID from being transmitted over non-HTTPS
+SECURE_SSL_REDIRECT = False  # Redirect all non-HTTPS requests to HTTPS
