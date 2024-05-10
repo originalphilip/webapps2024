@@ -39,6 +39,7 @@ class Transaction(models.Model):
     def __str__(self):
         return f'{self.sender.username} -> {self.receiver.username}: {self.original_amount} {self.original_currency} on {self.timestamp.strftime("%Y-%m-%d %H:%M:%S")}'
 
+
 class PaymentRequest(models.Model):
     sender = models.ForeignKey(User, related_name='sent_payment_requests', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_payment_requests', on_delete=models.CASCADE, null=True)#change to null=false when fields are updated
@@ -49,6 +50,7 @@ class PaymentRequest(models.Model):
 
     def __str__(self):
         return f"{self.amount} {self.currency} from {self.sender.username} to {self.receiver.username} status {self.status}"
+
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')

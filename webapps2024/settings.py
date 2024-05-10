@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "transactions.apps.TransactionsConfig",
     "currency.apps.CurrencyConfig",
     'rest_framework',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -141,6 +142,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 LOGIN_URL = '/webapps2024/login/' #This tells Django where to redirect users for loggin in when the 'login_required'
 
 # settings.py
-CSRF_COOKIE_SECURE = False  # to prevent CSRF token from being transmitted over non-HTTPS connections
-SESSION_COOKIE_SECURE = False  # to prevent the session ID from being transmitted over non-HTTPS
-SECURE_SSL_REDIRECT = False  # Redirect all non-HTTPS requests to HTTPS
+CSRF_COOKIE_SECURE = True  # to prevent CSRF token from being transmitted over non-HTTPS connections
+SESSION_COOKIE_SECURE = True  # to prevent the session ID from being transmitted over non-HTTPS
+SECURE_SSL_REDIRECT = not DEBUG  # Redirect all non-HTTPS requests to HTTPS
+RUNSERVERPLUS_SERVER_ADDRESS_PORT = '0.0.0.0:8000'

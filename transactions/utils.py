@@ -2,6 +2,7 @@ import requests
 from django.db.models import F
 from .models import Points, Transaction
 
+
 def get_currency_conversion(base_currency, target_currency, amount):
     url = f"http://localhost:8000/webapps2024/conversion/{base_currency}/{target_currency}/{amount}"
 

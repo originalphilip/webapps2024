@@ -27,6 +27,7 @@ def login_user(request):
     form = AuthenticationForm()
     return render(request, "register/login.html", {"login_user": form})
 
+
 @csrf_protect
 def register_user(request):
     if request.method == "POST":

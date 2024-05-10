@@ -1,5 +1,6 @@
 from django.db import transaction, OperationalError
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from transactions.forms import MoneyTransferForm, PaymentRequestForm
 from .models import Points, Notification, Transaction, PaymentRequest
@@ -10,8 +11,10 @@ from .utils import get_currency_conversion, transfer_money
 from register.models import Profile
 from decimal import Decimal
 
+
 @login_required()
 @transaction.atomic()
+@csrf_protect
 def money_transfer(request):
     if request.method == 'POST':
         form = MoneyTransferForm(request.POST)
@@ -62,7 +65,9 @@ def list_transactions(request):
         'user_currency': user_currency
     })
 
+
 @login_required
+@csrf_protect
 def create_payment_request(request):
     if request.method == 'POST':
         form = PaymentRequestForm(request.POST, user=request.user)
@@ -91,10 +96,12 @@ def create_payment_request(request):
         form = PaymentRequestForm(user=request.user)
     return render(request, 'transactions/create_payment_request.html', {'form': form})
 
+
 @login_required
 def view_payment_requests(request):
     payment_requests = PaymentRequest.objects.filter(receiver=request.user, status='pending')
     return render(request, 'transactions/view_payment_requests.html', {'payment_requests': payment_requests})
+
 
 @login_required
 def accept_payment_request(request, payment_request_id):
@@ -114,6 +121,7 @@ def accept_payment_request(request, payment_request_id):
         messages.error(request, "This payment request has already been processed.")
         return redirect('list_transactions')
 
+
 @login_required
 def reject_payment_request(request, request_id):
     payment_request = get_object_or_404(PaymentRequest, id=request_id, receiver=request.user)
@@ -121,9 +129,11 @@ def reject_payment_request(request, request_id):
     payment_request.save()
     return redirect('view_payment_requests')
 
+
 def notifications(request):
     user_notifications = Notification.objects.filter(user=request.user, read=False)
     return render(request, 'notifications.html', {'notifications': user_notifications})
+
 
 @require_POST
 def mark_as_read(request, notification_id):
