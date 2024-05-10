@@ -7,7 +7,8 @@ from register.models import Profile
 
 @login_required
 def home(request):
-    profile = Profile.objects.get(user=request.user)
+    user = request.user
+    profile, created = Profile.objects.get_or_create(user=user)
     try:
         points = Points.objects.get(user=request.user)
     except Points.DoesNotExist:
